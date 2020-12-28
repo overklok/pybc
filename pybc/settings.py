@@ -1,0 +1,25 @@
+# Colors
+CL_WHITE = (255, 255, 255)
+CL_BLACK = (0, 0, 0)
+CL_DARKGREY = (40, 40, 40)
+CL_LIGHTGREY = (100, 100, 100)
+CL_GREEN = (0, 255, 0)
+CL_RED = (255, 0, 0)
+CL_YELLOW = (255, 255, 0)
+CL_BROWN = (106, 55, 5)
+CL_CYAN = (0, 255, 255)
+
+# Canvas
+CS_WIDTH = 1024
+CS_HEIGHT = 768
+CS_PADDING = 20
+CS_BGCOLOR = CL_BLACK
+
+# Grid
+GD_DIM_X = 13
+GD_DIM_Y = 13
+
+# FPS
+FPS = 60
+TITLE = "pybc"
+

@@ -37,18 +37,14 @@ class Player(pg.sprite.Sprite):
         self.y = j + dj * self.grid.tilesize
 
     def can_dmove(self, dx=0, dy=0):
-        x = self.grid.x_from + self.x + dx
-        y = self.grid.y_from + self.y + dy
+        x = self.x + dx
+        y = self.y + dy
 
         ci, cj = self.grid.get_cell_index(x, y, centered=True)
 
-        ijs = []
+        dbg.v_point_set(self.grid.x_from + x, self.grid.y_from + y)
 
-        dbg.v_point_set(x, y)
-
-        #for (i, j) in self.grid.obstacles((ci, cj), (1, 1)):
-        for (i, j) in self.grid.obstacles():
-            ijs.append((i, j))
+        for (i, j) in self.grid.obstacles((ci, cj), (1, 1)):
             obs_x_from, obs_y_from = self.grid.get_cell_position(i, j)
 
             obs_x_to = obs_x_from + self.grid.tilesize

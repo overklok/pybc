@@ -41,7 +41,11 @@ class Grid:
 
     def loadmap(self):
         self.cells = [[0] * self.dim_y for _ in range(self.dim_x)]
-        self.cells[2][2] = 1
+        self.cells[2][2:6] = [1] * 4
+        self.cells[6][2:6] = [1] * 4
+        self.cells[3][2:6:4]  = [1]
+        self.cells[4][2:6:4]  = [1]
+        self.cells[5][2:7:4]  = [1, 1]
 
     def obstacles(self, scope_from=None, scope_dim=None):
         for (i, j), cell in self.all_cells(scope_from, scope_dim):
@@ -58,7 +62,6 @@ class Grid:
             y_from, y_to = max(0, scope_from[1] - scope_dim[1]), min(self.dim_y, scope_from[1] + scope_dim[1])
 
             cells = (row[x_from:x_to+1] for row in self.cells[y_from:y_to+1])
-            print('c', x_from, x_to, y_from, y_to)
 
         for j, row in enumerate(cells):
             for i, cell in enumerate(row):
@@ -95,6 +98,6 @@ class Grid:
                0 if y == 0 else math.floor(self.dim_y * y / (self.y_to - self.y_from))
 
     def get_cell_position(self, i, j):
-        return self.x_from + self.tilesize * i, \
-               self.y_from + self.tilesize * j
+        return self.tilesize * i, \
+               self.tilesize * j
 

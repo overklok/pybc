@@ -1,3 +1,5 @@
+import math
+
 from . import (
     settings as sts,
     helpers as hlp
@@ -10,7 +12,7 @@ def points_generator(p_from, p_to, step):
 
     if not ((p_to - p_from) % step):
         yield p_to
-    
+
 
 def points_centered(p_from, p_to, step, amount):
     p_size = p_to - p_from
@@ -27,12 +29,41 @@ class Grid:
     dim_x = sts.GD_DIM_X
     dim_y = sts.GD_DIM_Y
 
+    cells = []
+
     def __init__(self):
         self.tilesize = None
         self.x_from, self.x_to, self.x_points = None, None, None
         self.y_from, self.y_to, self.y_points = None, None, None
 
         self.recalc()
+        self.loadmap()
+
+    def loadmap(self):
+        self.cells = [[0] * self.dim_y for _ in range(self.dim_x)]
+        self.cells[2][2] = 1
+
+    def obstacles(self, scope_from=None, scope_dim=None):
+        for (i, j), cell in self.all_cells(scope_from, scope_dim):
+            if cell == 1:
+                yield (i, j)
+
+    def all_cells(self, scope_from=None, scope_dim=None):
+        cells = self.cells
+
+        x_from, y_from = 0, 0
+
+        if scope_from and scope_dim:
+            x_from, x_to = max(0, scope_from[0] - scope_dim[0]), min(self.dim_x, scope_from[0] + scope_dim[0])
+            y_from, y_to = max(0, scope_from[1] - scope_dim[1]), min(self.dim_y, scope_from[1] + scope_dim[1])
+
+            cells = (row[x_from:x_to+1] for row in self.cells[y_from:y_to+1])
+            print('c', x_from, x_to, y_from, y_to)
+
+        for j, row in enumerate(cells):
+            for i, cell in enumerate(row):
+                yield (x_from + i, y_from + j), cell
+
 
     def resize(self, dx, dy):
         self.dim_x = hlp.clamp(1, sts.CS_WIDTH - 2 * sts.CS_PADDING, self.dim_x + dx)
@@ -55,6 +86,15 @@ class Grid:
         self.x_points = list(points_generator(self.x_from, self.x_to, self.tilesize))
         self.y_points = list(points_generator(self.y_from, self.y_to, self.tilesize))
 
-    def get_cell(self, x, y):
-        return (self.x_to - self.x_from) // x, \
-               (self.y_to - self.y_from) // y
+    def get_cell_index(self, x, y, centered=False):
+        if centered:
+            x += self.tilesize / 2
+            y += self.tilesize / 2
+
+        return 0 if x == 0 else math.floor(self.dim_x * x / (self.x_to - self.x_from)), \
+               0 if y == 0 else math.floor(self.dim_y * y / (self.y_to - self.y_from))
+
+    def get_cell_position(self, i, j):
+        return self.x_from + self.tilesize * i, \
+               self.y_from + self.tilesize * j
+

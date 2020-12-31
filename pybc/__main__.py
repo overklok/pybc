@@ -4,7 +4,8 @@ import pygame as pg
 from pybc import (
     generics as gnr,
     settings as sts, 
-    sprites as spr
+    sprites as spr,
+    debug as dbg,
 )
 
 
@@ -12,11 +13,17 @@ class Game:
     def __init__(self):
         pg.init()
         pg.display.set_caption(sts.TITLE)
-        pg.key.set_repeat(1, 0)
+        pg.key.set_repeat(10, 0)
 
         self.screen = pg.display.set_mode((sts.CS_WIDTH, sts.CS_HEIGHT))
         self.clock = pg.time.Clock()
         self.grid = gnr.Grid()
+
+        self.sprites_all = pg.sprite.Group()
+        self.sprites_walls = pg.sprite.Group()
+
+        self.surf_dbg = pg.Surface((5, 5))
+        self.surf_dbg.fill(sts.CL_RED)
 
         self.load_data()
 
@@ -24,15 +31,17 @@ class Game:
         pass
 
     def new(self):
-        self.all_sprites = pg.sprite.Group()
+        self.sprites_all = pg.sprite.Group()
         self.walls = pg.sprite.Group()
         self.player = spr.Player(self.grid)
 
-        self.all_sprites.add(self.player)
+        for (x, y) in self.grid.obstacles():
+            wall = spr.Wall(self.grid, x, y)
 
-        for x in range(10, 20):
-            wall = spr.Wall(self.grid, x, 5)
-            self.all_sprites.add(wall)
+            self.sprites_walls.add(wall)
+            self.sprites_all.add(wall)
+
+        self.sprites_all.add(self.player)
 
     def run(self):
         self.playing = True
@@ -47,22 +56,23 @@ class Game:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 self.quit()
-            
+
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE: self.quit()
-                if event.key == pg.K_LEFT:   self.player.move(dx=-1)
-                if event.key == pg.K_RIGHT:  self.player.move(dx=1)
-                if event.key == pg.K_UP:     self.player.move(dy=-1)
-                if event.key == pg.K_DOWN:   self.player.move(dy=1)
-    
+                if event.key == pg.K_LEFT:   self.player.dmove(dx=-1)
+                if event.key == pg.K_RIGHT:  self.player.dmove(dx=1)
+                if event.key == pg.K_UP:     self.player.dmove(dy=-1)
+                if event.key == pg.K_DOWN:   self.player.dmove(dy=1)
+
     def update(self):
-        self.all_sprites.update()
+        self.sprites_all.update()
 
     def draw(self):
         self.screen.fill(sts.CS_BGCOLOR)
 
         self.draw_grid()
         self.draw_sprites()
+        self.draw_debug()
 
         pg.display.flip()
 
@@ -71,7 +81,7 @@ class Game:
         sys.exit()
 
     def draw_sprites(self):
-        for entity in self.all_sprites:
+        for entity in self.sprites_all:
             self.screen.blit(entity.surf, entity.rect)
 
     def draw_grid(self):
@@ -80,6 +90,12 @@ class Game:
 
         for y in self.grid.y_points:
             pg.draw.line(self.screen, sts.CL_LIGHTGREY, (self.grid.x_from, y), (self.grid.x_to, y))
+
+    def draw_debug(self):
+        point = dbg.v_point_get()
+
+        if point is not None:
+            self.screen.blit(self.surf_dbg, point)
 
 g = Game()
 

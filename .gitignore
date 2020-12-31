@@ -23,12 +23,15 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+### Vim ###
+*~
+*.swp
+*.swo
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
-*/*.py[cod]
 celerybeat-schedule
 
 # C extensions

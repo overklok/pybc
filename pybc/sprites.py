@@ -21,8 +21,8 @@ class Player(pg.sprite.Sprite):
 
         self.speed = 6
 
-    def dmove(self, dx=0, dy=0):
-        dx *= self.speed
+    def dmove(self, dx=0, dy=0, speed=None):
+        dx *= speed or self.speed
         dy *= self.speed
 
         dx, dy = self.can_dmove(dx, dy)
@@ -33,12 +33,31 @@ class Player(pg.sprite.Sprite):
     def dmove_cell(self, di=0, dj=0):
         i, j = self.grid.get_cell_index(self.x, self.y)
 
-        self.x = i + di * self.grid.tilesize
-        self.y = j + dj * self.grid.tilesize
+        x, y = self.grid.get_cell_position(i + di, j + dj)
+
+        dx = x - self.x
+        dy = y - self.y
+
+        self.dmove(dx, dy)
 
     def can_dmove(self, dx=0, dy=0):
         x = self.x + dx
         y = self.y + dy
+
+        if x < 0 or y < 0:
+            if dx < 0: dx = dx - x
+            if dy < 0: dy = dy - y
+
+            return dx, dy
+
+        gx = self.grid.width() - self.grid.tilesize
+        gy = self.grid.height() - self.grid.tilesize
+
+        if x > gx or y > gy:
+            if dx > 0: dx = dx - (x - gx)
+            if dy > 0: dy = dy - (y - gy)
+
+            return dx, dy
 
         ci, cj = self.grid.get_cell_index(x, y, centered=True)
 

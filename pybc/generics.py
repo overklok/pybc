@@ -39,6 +39,12 @@ class Grid:
         self.recalc()
         self.loadmap()
 
+    def width(self):
+        return self.x_to - self.x_from
+
+    def height(self):
+        return self.y_to - self.y_from
+
     def loadmap(self):
         self.cells = [[0] * self.dim_y for _ in range(self.dim_x)]
         self.cells[2][2:6] = [1] * 4

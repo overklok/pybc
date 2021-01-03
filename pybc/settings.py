@@ -23,3 +23,5 @@ GD_DIM_Y = 13
 FPS = 60
 TITLE = "pybc"
 
+# Gameplay
+PLAYER_SPEED = 300

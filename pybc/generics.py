@@ -95,6 +95,26 @@ class Grid:
         self.x_points = list(points_generator(self.x_from, self.x_to, self.tilesize))
         self.y_points = list(points_generator(self.y_from, self.y_to, self.tilesize))
 
+    def intersects_with(self, cells, x, y, w=None, h=None):
+        w = w or self.tilesize
+        h = h or self.tilesize
+
+        for (i, j) in cells:
+            obs_x_from, obs_y_from = self.get_cell_position(i, j)
+
+            obs_x_to = obs_x_from + self.tilesize
+            obs_y_to = obs_y_from + self.tilesize
+
+            col_right = max(0, (x + w) - obs_x_from)
+            col_left = max(0, obs_x_to - x)
+            col_top = max(0, (y + h) - obs_y_from)
+            col_bottom = max(0, obs_y_to - y)
+
+            if col_top and col_bottom and col_right and col_left:
+                return obs_x_from, obs_x_to, obs_y_from, obs_y_to
+
+        return None 
+
     def get_cell_index(self, x, y, centered=False):
         if centered:
             x += self.tilesize / 2

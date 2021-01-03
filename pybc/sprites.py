@@ -16,21 +16,35 @@ class Player(pg.sprite.Sprite):
 
         self.rect = self.surf.get_rect()
 
-        self.x = 0
-        self.y = 0
+        self.vx, self.vy = 0, 0
+        self.x, self.y = 0, 0
 
-        self.speed = 6
+        self.speed = sts.PLAYER_SPEED
 
-    def dmove(self, dx=0, dy=0, speed=None):
-        dx *= speed or self.speed
-        dy *= self.speed
+    def handle(self):
+        self.vx, self.vy = 0, 0
 
-        dx, dy = self.can_dmove(dx, dy)
+        keys = pg.key.get_pressed()
 
-        self.x += dx
-        self.y += dy
+        if keys[pg.K_LEFT]  or keys[pg.K_a]: self.vx = -self.speed
+        if keys[pg.K_RIGHT] or keys[pg.K_d]: self.vx =  self.speed
+        if keys[pg.K_UP]    or keys[pg.K_w]: self.vy = -self.speed
+        if keys[pg.K_DOWN]  or keys[pg.K_s]: self.vy =  self.speed
 
-    def dmove_cell(self, di=0, dj=0):
+        if self.vx != 0 and self.vy != 0:
+            self.vx = 0.7071
+            self.vy = 0.7071
+
+    def update(self, dt):
+        x, y = self.collide(dt * self.vx, dt * self.vy)
+
+        self.x = x
+        self.y = y
+
+        self.rect.x = self.grid.x_from + self.x
+        self.rect.y = self.grid.y_from + self.y
+
+    def move_to_cell(self, di=0, dj=0):
         i, j = self.grid.get_cell_index(self.x, self.y)
 
         x, y = self.grid.get_cell_position(i + di, j + dj)
@@ -40,56 +54,50 @@ class Player(pg.sprite.Sprite):
 
         self.dmove(dx, dy)
 
-    def can_dmove(self, dx=0, dy=0):
-        x = self.x + dx
-        y = self.y + dy
+    def collide(self, dx=0, dy=0):
+        x, y = self.x, self.y
 
-        if x < 0 or y < 0:
-            if dx < 0: dx = dx - x
-            if dy < 0: dy = dy - y
+        if dx:
+            x = self.x + dx
 
-            return dx, dy
+            if x < 0:
+                if dx < 0: x = 0
 
-        gx = self.grid.width() - self.grid.tilesize
-        gy = self.grid.height() - self.grid.tilesize
+            gx = self.grid.width() - self.grid.tilesize
 
-        if x > gx or y > gy:
-            if dx > 0: dx = dx - (x - gx)
-            if dy > 0: dy = dy - (y - gy)
+            if x > gx:
+                if dx > 0: x = gx
 
-            return dx, dy
+            ci, cj = self.grid.get_cell_index(x, y, centered=True)
+            obs = self.grid.intersects_with(x=x, y=y, cells=self.grid.obstacles((ci, cj), (1, 1)))
 
-        ci, cj = self.grid.get_cell_index(x, y, centered=True)
+            if obs:
+                obs_x_from, obs_x_to, _, _ = obs
+                if dx > 0: x = obs_x_from - self.grid.tilesize
+                if dx < 0: x = obs_x_to
 
-        dbg.v_point_set(self.grid.x_from + x, self.grid.y_from + y)
+        if dy:
+            y = self.y + dy
 
-        for (i, j) in self.grid.obstacles((ci, cj), (1, 1)):
-            obs_x_from, obs_y_from = self.grid.get_cell_position(i, j)
+            if y < 0:
+                if dy < 0: y = 0
 
-            obs_x_to = obs_x_from + self.grid.tilesize
-            obs_y_to = obs_y_from + self.grid.tilesize
+            gy = self.grid.height() - self.grid.tilesize
 
-            col_right = max(0, (x + self.grid.tilesize) - obs_x_from)
-            col_left = max(0, obs_x_to - x)
-            col_top = max(0, (y + self.grid.tilesize) - obs_y_from)
-            col_bottom = max(0, obs_y_to - y)
+            if y > gy:
+                if dy > 0: y = gy
 
-            if col_top and col_bottom and col_right and col_left:
-                if dx > 0: dx = dx - col_right
-                if dx < 0: dx = dx + col_left
-                if dy > 0: dy = dy - col_top
-                if dy < 0: dy = dy + col_bottom
+            ci, cj = self.grid.get_cell_index(x, y, centered=True)
+            obs = self.grid.intersects_with(x=x, y=y, cells=self.grid.obstacles((ci, cj), (1, 1)))
 
-                return dx, dy
+            if obs:
+                _, _, obs_y_from, obs_y_to = obs
+                if dy > 0: y = obs_y_from - self.grid.tilesize
+                if dy < 0: y = obs_y_to
 
-        return dx, dy
+        return x, y
 
-    def update(self):
-        self.rect.x = self.grid.x_from + self.x
-        self.rect.y = self.grid.y_from + self.y
-
-
-class Wall(pg.sprite.Sprite):
+class Obstacle(pg.sprite.Sprite):
     def __init__(self, grid, x, y, color=sts.CL_GREEN):
         super().__init__()
 

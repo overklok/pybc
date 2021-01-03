@@ -13,14 +13,16 @@ class Game:
     def __init__(self):
         pg.init()
         pg.display.set_caption(sts.TITLE)
-        pg.key.set_repeat(10, 0)
+        pg.key.set_repeat(500, 100)
+
+        self.dt = 0
 
         self.screen = pg.display.set_mode((sts.CS_WIDTH, sts.CS_HEIGHT))
         self.clock = pg.time.Clock()
         self.grid = gnr.Grid()
 
         self.sprites_all = pg.sprite.Group()
-        self.sprites_walls = pg.sprite.Group()
+        self.sprites_obstacles = pg.sprite.Group()
 
         self.surf_dbg = pg.Surface((5, 5))
         self.surf_dbg.fill(sts.CL_RED)
@@ -36,10 +38,10 @@ class Game:
         self.player = spr.Player(self.grid)
 
         for (x, y) in self.grid.obstacles():
-            wall = spr.Wall(self.grid, x, y)
+            obstacle = spr.Obstacle(self.grid, x, y)
 
-            self.sprites_walls.add(wall)
-            self.sprites_all.add(wall)
+            self.sprites_obstacles.add(obstacle)
+            self.sprites_all.add(obstacle)
 
         self.sprites_all.add(self.player)
 
@@ -59,13 +61,11 @@ class Game:
 
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE: self.quit()
-                if event.key == pg.K_LEFT:   self.player.dmove(dx=-1)
-                if event.key == pg.K_RIGHT:  self.player.dmove(dx=1)
-                if event.key == pg.K_UP:     self.player.dmove(dy=-1)
-                if event.key == pg.K_DOWN:   self.player.dmove(dy=1)
+
+            self.player.handle()
 
     def update(self):
-        self.sprites_all.update()
+        self.sprites_all.update(self.dt)
 
     def draw(self):
         self.screen.fill(sts.CS_BGCOLOR)
